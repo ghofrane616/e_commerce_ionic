@@ -1,0 +1,7 @@
+{
+  "name": "ecommerce-frontend",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "react-vite"
+}

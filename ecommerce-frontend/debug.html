@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Auth - E-Commerce</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+            transition: all 0.3s;
+        }
+        button:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+        }
+        .result {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .success { color: #2dd36f; font-weight: bold; }
+        .error { color: #eb445a; font-weight: bold; }
+        .warning { color: #ffc409; font-weight: bold; }
+        .info { color: #3880ff; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>🔍 Debug Authentication</h1>
+        
+        <div style="text-align: center;">
+            <button onclick="checkToken()">1️⃣ Check Token</button>
+            <button onclick="checkRole()">2️⃣ Check Role</button>
+            <button onclick="testAdminAccess()">3️⃣ Test Admin Access</button>
+            <button onclick="clearData()">🗑️ Clear All Data</button>
+        </div>
+
+        <div id="result" class="result"></div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:5000/api';
+        
+        function log(message, type = 'info') {
+            const result = document.getElementById('result');
+            const className = type;
+            result.innerHTML += `<span class="${className}">${message}</span>\n`;
+            result.scrollTop = result.scrollHeight;
+        }
+
+        function clearResult() {
+            document.getElementById('result').innerHTML = '';
+        }
+
+        // 1️⃣ Check Token
+        function checkToken() {
+            clearResult();
+            log('🔍 Vérification du token...', 'info');
+            
+            const token = localStorage.getItem('token');
+            
+            if (!token) {
+                log('❌ Aucun token trouvé!', 'error');
+                log('➡️ Connectez-vous d\'abord sur /login', 'warning');
+                return;
+            }
+            
+            log('✅ Token trouvé!', 'success');
+            log(`Token: ${token.substring(0, 50)}...`, 'info');
+            
+            try {
+                // Decode JWT
+                const parts = token.split('.');
+                if (parts.length !== 3) {
+                    log('❌ Token invalide (format incorrect)', 'error');
+                    return;
+                }
+                
+                const payload = JSON.parse(atob(parts[1]));
+                log('\n📋 Payload décodé:', 'success');
+                log(JSON.stringify(payload, null, 2));
+                
+                // Check expiration
+                if (payload.exp) {
+                    const expDate = new Date(payload.exp * 1000);
+                    const now = new Date();
+                    
+                    if (expDate < now) {
+                        log('\n⚠️ Token EXPIRÉ!', 'error');
+                        log(`Expiré le: ${expDate.toLocaleString()}`, 'error');
+                    } else {
+                        log('\n✅ Token valide', 'success');
+                        log(`Expire le: ${expDate.toLocaleString()}`, 'info');
+                    }
+                }
+                
+            } catch (error) {
+                log(`❌ Erreur décodage: ${error.message}`, 'error');
+            }
+        }
+
+        // 2️⃣ Check Role
+        function checkRole() {
+            clearResult();
+            log('👑 Vérification du rôle...', 'info');
+            
+            const token = localStorage.getItem('token');
+            
+            if (!token) {
+                log('❌ Aucun token trouvé!', 'error');
+                return;
+            }
+            
+            try {
+                const payload = JSON.parse(atob(token.split('.')[1]));
+                
+                log(`Username: ${payload.username || 'N/A'}`, 'info');
+                log(`Email: ${payload.email || 'N/A'}`, 'info');
+                log(`User ID: ${payload.id || payload._id || payload.userId || 'N/A'}`, 'info');
+                
+                const role = payload.role;
+                
+                if (!role) {
+                    log('\n❌ PROBLÈME: Aucun rôle défini!', 'error');
+                    log('Le token ne contient pas de "role"', 'error');
+                    log('➡️ Vérifiez votre backend (JWT doit inclure "role")', 'warning');
+                    return;
+                }
+                
+                if (role === 'admin') {
+                    log(`\n✅ Rôle: ${role.toUpperCase()}`, 'success');
+                    log('🎉 Vous avez accès à /admin!', 'success');
+                } else {
+                    log(`\n⚠️ Rôle: ${role}`, 'warning');
+                    log('❌ Accès /admin REFUSÉ (rôle user)', 'error');
+                    log('➡️ Connectez-vous avec un compte admin', 'warning');
+                }
+                
+            } catch (error) {
+                log(`❌ Erreur: ${error.message}`, 'error');
+            }
+        }
+
+        // 3️⃣ Test Admin Access
+        async function testAdminAccess() {
+            clearResult();
+            log('🧪 Test accès API admin...', 'info');
+            
+            const token = localStorage.getItem('token');
+            
+            if (!token) {
+                log('❌ Aucun token trouvé!', 'error');
+                return;
+            }
+            
+            try {
+                // Test GET /products
+                log('\n📡 Test: GET /products', 'info');
+                const resProducts = await fetch(`${API_URL}/products`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                if (resProducts.ok) {
+                    const products = await resProducts.json();
+                    log(`✅ Products: ${products.length} produits`, 'success');
+                } else {
+                    log(`❌ Products: ${resProducts.status} ${resProducts.statusText}`, 'error');
+                }
+                
+                // Test GET /orders (admin only)
+                log('\n📡 Test: GET /orders (admin)', 'info');
+                const resOrders = await fetch(`${API_URL}/orders`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                if (resOrders.ok) {
+                    const orders = await resOrders.json();
+                    log(`✅ Orders: ${orders.length} commandes`, 'success');
+                    log('🎉 Accès admin OK!', 'success');
+                } else {
+                    log(`❌ Orders: ${resOrders.status} ${resOrders.statusText}`, 'error');
+                    if (resOrders.status === 403) {
+                        log('⚠️ Accès refusé: Vous n\'êtes pas admin', 'error');
+                    }
+                }
+                
+                // Check current route access
+                log('\n📍 Vérification routes:', 'info');
+                const payload = JSON.parse(atob(token.split('.')[1]));
+                if (payload.role === 'admin') {
+                    log('✅ Accès autorisé: /admin', 'success');
+                    log('✅ Accès autorisé: /admin/orders', 'success');
+                } else {
+                    log('❌ Accès refusé: /admin', 'error');
+                    log('❌ Accès refusé: /admin/orders', 'error');
+                }
+                
+            } catch (error) {
+                log(`❌ Erreur: ${error.message}`, 'error');
+                log('⚠️ Vérifiez que le backend est lancé (port 5000)', 'warning');
+            }
+        }
+
+        // 🗑️ Clear Data
+        function clearData() {
+            if (confirm('Êtes-vous sûr de vouloir supprimer toutes les données?')) {
+                localStorage.clear();
+                clearResult();
+                log('✅ Toutes les données supprimées!', 'success');
+                log('➡️ Reconnectez-vous sur /login', 'info');
+            }
+        }
+
+        // Auto-check on load
+        window.onload = function() {
+            log('🚀 Tool de debug chargé!', 'success');
+            log('Cliquez sur les boutons pour tester\n', 'info');
+        };
+    </script>
+</body>
+</html>
