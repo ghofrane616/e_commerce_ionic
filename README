@@ -1,0 +1,110 @@
+**Project Overview**
+
+- **Name**: e_commerce_ionic
+- **Description**: Projet d'exemple e-commerce composé d'une API Node.js (backend) et d'une application Ionic + Vite (frontend). Le dépôt contient deux dossiers principaux : `ecommerce-backend` et `ecommerce-frontend`.
+
+**Quick Links**
+- **Backend**: `ecommerce-backend`
+- **Frontend**: `ecommerce-frontend`
+
+**Prerequisites**
+- **Node.js**: version 14+ recommandée. Vérifier avec `node -v`.
+- **npm**: fourni avec Node.js. Vérifier avec `npm -v`.
+- **MongoDB**: base de données pour le backend (local ou MongoDB Atlas).
+- **Android Studio / JDK**: (optionnel) pour construire l'application Android via Capacitor.
+
+**Setup & Installation**
+
+- Backend (API)
+
+  - Ouvrir un terminal PowerShell et aller dans le dossier `ecommerce-backend` :
+
+    ```powershell
+    cd .\ecommerce-backend
+    npm install
+    ```
+
+  - Variables d'environnement attendues (exemples) :
+
+    - `MONGO_URI`: URI de connexion MongoDB
+    - `JWT_SECRET`: clé secrète pour les tokens JWT
+    - `PORT`: port sur lequel lancer l'API (par défaut 5000 ou 3000 selon configuration)
+
+  - Démarrage (exemple) :
+
+    ```powershell
+    node server.js
+    # ou si un script npm est configuré
+    npm start
+    ```
+
+- Frontend (Ionic + Vite)
+
+  - Aller dans le dossier `ecommerce-frontend` :
+
+    ```powershell
+    cd ..\ecommerce-frontend
+    npm install
+    ```
+
+  - Démarrer l'application en mode développement (Vite) :
+
+    ```powershell
+    npm run dev
+    ```
+
+  - Construire pour production :
+
+    ```powershell
+    npm run build
+    ```
+
+  - Pour exécuter sur un appareil Android via Capacitor (après avoir configuré le SDK Android) :
+
+    ```powershell
+    npx cap sync android
+    npx cap open android
+    ```
+
+**Structure du dépôt (raccourci)**
+
+- `ecommerce-backend/`
+  - `server.js` : point d'entrée du serveur
+  - `config/` : configuration (ex. `db.js`)
+  - `controllers/` : logique métier par route
+  - `models/` : modèles Mongoose (User, Product, Order, Cart)
+  - `routes/` : définitions des routes API
+  - `middlewares/` : middlewares (ex. authentification)
+
+- `ecommerce-frontend/`
+  - `src/` : code source de l'app Ionic/React
+  - `public/` : fichiers statiques
+  - `android/` : projets Android générés par Capacitor
+
+**Usage courant**
+
+- Lancer d'abord MongoDB (local ou configurer `MONGO_URI`).
+- Démarrer le backend puis le frontend.
+- Se connecter à l'API depuis l'app frontend en pointant l'URL de l'API (à ajuster dans `src/services/api.ts` si nécessaire).
+
+**Tests**
+- Si des tests existent, exécuter :
+
+```powershell
+# depuis chaque package si des scripts test sont présents
+npm test
+```
+
+**Dépannage**
+- Vérifier les variables d'environnement si l'API ne démarre pas.
+- Regarder les logs de `server.js` et la console du navigateur pour le frontend.
+
+**Contribuer**
+- Forker le projet, créer une branche feature/fix, puis ouvrir une Pull Request.
+- Décrire clairement les changements et les étapes pour reproduire.
+
+**Licence**
+- Indiquer la licence souhaitée ici (ex. MIT) ou ajouter un fichier `LICENSE`.
+
+**Remarques**
+- Ce `README.md` fournit des instructions générales. Consultez les fichiers `package.json` respectifs si des scripts personnalisés sont définis, et adaptez les commandes ci-dessus aux scripts existants.
